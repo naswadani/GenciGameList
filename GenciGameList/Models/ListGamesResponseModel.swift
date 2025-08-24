@@ -10,13 +10,11 @@ import Foundation
 public struct ListGamesResponseModel: Codable, Equatable {
     public let count: Int
     public let next: String?
-    public let previous: String?
     public let games: [Game]
     
     enum CodingKeys: String, CodingKey {
         case count
         case next
-        case previous
         case games = "results"
     }
 }
