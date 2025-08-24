@@ -8,29 +8,43 @@
 import SwiftUI
 
 struct GameListItemView: View {
+    @StateObject private var imgLoader = DataURLImageLoader()
+    let game: Game
+    
     var body: some View {
         HStack(alignment: .top) {
-            Image("game")
-                .resizable()
-                .frame(maxWidth: 80)
-                .frame(maxHeight: 60)
-                .cornerRadius(10)
-                .scaledToFit()
+            AsyncImage(url: imgLoader.dataURL) { phase in
+                switch phase {
+                case .empty:
+                    ZStack {
+                        Color.gray.opacity(0.12)
+                        ProgressView()
+                    }
+                case .success(let image):
+                    image.resizable()
+                        .scaledToFill()
+                case .failure:
+                    ZStack {
+                        Color.gray.opacity(0.12)
+                        Image(systemName: "photo.slash").foregroundStyle(.secondary)
+                    }
+                @unknown default:
+                    EmptyView()
+                }
+            }
+            .frame(width: 80, height: 60)
+            .mask(RoundedRectangle(cornerRadius: 10, style: .continuous))
+            .task { await imgLoader.load(game.backgroundImage) }
+            
             
             VStack(alignment: .leading, spacing: 5) {
-                Text("Borderland 4")
+                Text(game.name ?? "")
                     .font(.title3)
                     .fontWeight(.semibold)
                     .fontDesign(.default)
                     .foregroundStyle(.primary)
                 
-                Text("17-08-2029")
-                    .font(.caption)
-                    .fontWeight(.semibold)
-                    .fontDesign(.default)
-                    .foregroundColor(.secondary)
-                
-                Text("Rockstar Games")
+                Text(game.released ?? "")
                     .font(.caption)
                     .fontWeight(.semibold)
                     .fontDesign(.default)
@@ -50,8 +64,4 @@ struct GameListItemView: View {
             }
         }
     }
-}
-
-#Preview {
-    GameListItemView()
 }

@@ -4,7 +4,7 @@
 <dict>
 	<key>API_BASE_URL</key>
 	<string>https://api.rawg.io/api</string>
-	<key>KEY_API</key>
+	<key>API_KEY</key>
 	<string>f37cf8ff79df40fb86119195611f72ac</string>
 	<key>UIBackgroundModes</key>
 	<array>

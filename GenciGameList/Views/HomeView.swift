@@ -8,39 +8,48 @@
 import SwiftUI
 
 struct HomeView: View {
-    @State private var username: String = ""
+    @StateObject var viewModel: HomeViewModel
     
     var body: some View {
         ScrollView(.vertical, showsIndicators: false) {
-            LazyVStack(spacing: 24) {
+            switch viewModel.state {
+            case .idle:
                 HStack {
-                    TextField("Search", text: $username)
-                    Spacer()
-                    Image(systemName: "magnifyingglass")
-                        .foregroundStyle(.primary)
+                    Text("Hai")
                 }
-                .frame(maxWidth: .infinity)
-                .padding(10)
-                .background(
-                    RoundedRectangle(cornerRadius: 20)
-                        .stroke(style: .init())
-                )
-                
+                .onAppear {
+                    viewModel.fetchFirst()
+                }
+            case .loading:
+                HStack {
+                    Text("Loading")
+                }
+            case .data(_, _):
                 LazyVStack(spacing: 10) {
-                    ForEach(0..<20, id: \.self) { index in
+                    ForEach(viewModel.items) { game in
                         NavigationLink(destination: DetailGameView()) {
-                            GameListItemView()
+                            GameListItemView(game: game)
                         }
                         .buttonStyle(PlainButtonStyle())
                         Divider()
                     }
                 }
+                .padding(.horizontal)
+                .toolbar {
+                    ToolbarItemGroup(placement: .navigationBarTrailing) {
+                        NavigationLink(destination:  SearchView(viewModel: SearchGamesViewModel(
+                            repository: HomepageRepository(dataSource: HomepageDataSource())
+                        ))) {
+                            Image(systemName: "magnifyingglass")
+                                .font(.system(size: 20))
+                        }
+                    }
+                }
+            case .error(_):
+                HStack {
+                    Text("Loading")
+                }
             }
-            .padding(.horizontal)
         }
     }
-}
-
-#Preview {
-    HomeView()
 }

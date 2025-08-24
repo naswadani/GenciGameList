@@ -16,57 +16,54 @@ enum HomeViewState: Equatable {
 }
 
 final class HomeViewModel: ObservableObject {
-    private let repository: HomepageRepositoryProtocol
+    @Published private(set) var state: HomeViewState = .idle
+    @Published private(set) var items: [Game] = []
+
     private var bag = Set<AnyCancellable>()
+    private var inFlight: AnyCancellable?
     
-    private(set) var currentSearch: String?
-    
-    
-    @Published var viewState: HomeViewState = .idle
-    @Published var games: [Game] = []
-    @Published var isLoadingMore = false
-    
-    
+    private let repository: HomepageRepositoryProtocol
+    private var nextPage: Int?
+   
     init(repository: HomepageRepositoryProtocol) {
         self.repository = repository
     }
-    
-    func fetchFirst(search: String? = nil) {
-        currentSearch = search
-        viewState = .loading
-        games.removeAll()
-        
-        repository.fetch(.first(page: 1, search: search))
+
+    func fetchFirst() {
+        inFlight?.cancel()
+        state = .loading
+        items.removeAll()
+        nextPage = nil
+
+        inFlight = repository.fetch(.first(page: 1, search: nil))
             .receive(on: DispatchQueue.main)
-            .sink { [weak self] completion in
-                guard let self = self else { return }
-                if case .failure(let error) = completion {
-                    self.viewState = .error(error.localizedDescription)
+            .sink { [weak self] cancellable in
+                guard let self else { return }
+                if case .failure(let error) = cancellable {
+                    self.state = .error(error.localizedDescription)
                 }
-            } receiveValue : { [weak self] data in
-                guard let self = self else { return }
-                self.games = data.games
-                self.viewState = .data(games, next: data.next)
+            } receiveValue: { [weak self] data in
+                guard let self else { return }
+                self.items = data.games
+                self.nextPage = data.next?.extractPageNumber()
+                self.state = .data(self.items, next: data.next)
             }
-            .store(in: &bag)
     }
-    
-    func fetchNextIfNeeded() {
-        guard case let .data(_, next) = viewState,
-              let next, !isLoadingMore else { return }
+
+    func fetchNext() {
+        guard let page = nextPage else { return }
         
-        isLoadingMore = true
-        repository.fetch(.next(url: next))
+        inFlight?.cancel()
+        inFlight = repository.fetch(.first(page: page, search: nil))
             .receive(on: DispatchQueue.main)
             .sink { [weak self] c in
-                self?.isLoadingMore = false
-                if case .failure(let e) = c { self?.viewState = .error(e.localizedDescription) }
+                guard let self else { return }
+                if case .failure(let e) = c { self.state = .error(e.localizedDescription) }
             } receiveValue: { [weak self] data in
-                guard let self = self else { return }
-                self.games.append(contentsOf: data.games)
-                self.viewState = .data(self.games, next: data.next)
+                guard let self else { return }
+                self.items.append(contentsOf: data.games)
+                self.nextPage = data.next?.extractPageNumber()
+                self.state = .data(self.items, next: data.next)
             }
-            .store(in: &bag)
     }
-    
 }

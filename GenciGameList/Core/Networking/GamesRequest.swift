@@ -8,6 +8,6 @@
 import Foundation
 
 public enum GamesRequest {
-    case first(page: Int, search: String?)
+    case first(page: Int?, search: String?)
     case next(url: String)
 }

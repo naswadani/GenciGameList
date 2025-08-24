@@ -12,9 +12,11 @@ struct TabBarView: View {
     var body: some View {
         TabView(selection: $selectedTab) {
             NavigationStack {
-                HomeView()
-                    .navigationTitle("Favorites")
-                    .navigationBarTitleDisplayMode(.large)
+                HomeView(viewModel: HomeViewModel(
+                    repository: HomepageRepository(dataSource: HomepageDataSource())
+                ))
+                .navigationTitle("Home")
+                .navigationBarTitleDisplayMode(.large)
             }
             .tag(0)
             .tabItem {

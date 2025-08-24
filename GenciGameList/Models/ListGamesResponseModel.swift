@@ -12,6 +12,7 @@ public struct ListGamesResponseModel: Codable, Equatable {
     public let next: String?
     public let games: [Game]
     
+    
     enum CodingKeys: String, CodingKey {
         case count
         case next

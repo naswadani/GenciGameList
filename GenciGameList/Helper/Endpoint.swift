@@ -8,7 +8,7 @@
 import Foundation
 
 enum Endpoint {
-    case games(page: Int, search: String?)
+    case games(page: Int?, search: String?)
     case gameDetail(id: Int)
 
     var path: String {
@@ -22,10 +22,14 @@ enum Endpoint {
         switch self {
         case .games(let page, let search):
             var items: [URLQueryItem] = [
-                URLQueryItem(name: "page", value: "\(page)"),
                 URLQueryItem(name: "key", value: APIConfig.apiKey)
             ]
-            if let search { items.append(URLQueryItem(name: "search", value: search)) }
+            if let page {
+                items.append(URLQueryItem(name: "page", value: String(page)))
+            }
+            if let q = search, !q.isEmpty {
+                items.append(URLQueryItem(name: "search", value: q))
+            }
             return items
         case .gameDetail:
             return [URLQueryItem(name: "key", value: APIConfig.apiKey)]
