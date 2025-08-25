@@ -14,9 +14,9 @@
             buildForAnalyzing = "YES">
             <BuildableReference
                BuildableIdentifier = "primary"
-               BlueprintIdentifier = "949AC9727DAC3E5F50259A0C94092E5A"
-               BuildableName = "Pods_GenciGameList.framework"
-               BlueprintName = "Pods-GenciGameList"
+               BlueprintIdentifier = "BD9F52E07CA8CCC9E5112A7D8C1CE821"
+               BuildableName = "AlertToast.framework"
+               BlueprintName = "AlertToast"
                ReferencedContainer = "container:Pods.xcodeproj">
             </BuildableReference>
          </BuildActionEntry>

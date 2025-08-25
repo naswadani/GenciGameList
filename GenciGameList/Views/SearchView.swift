@@ -6,12 +6,13 @@
 //
 
 import SwiftUI
+import AlertToast
 
 struct SearchView: View {
     @StateObject var viewModel: SearchGamesViewModel
     var body: some View {
-        ScrollView(.vertical, showsIndicators: false) {
-            LazyVStack(spacing: 24) {
+        ZStack {
+            ScrollView(.vertical, showsIndicators: false) {
                 HStack {
                     TextField("Search", text: $viewModel.query)
                     Spacer()
@@ -24,23 +25,83 @@ struct SearchView: View {
                     .disabled(viewModel.query.isEmpty)
                 }
                 .frame(maxWidth: .infinity)
-                .padding(10)
-                .background(
-                    RoundedRectangle(cornerRadius: 20)
-                        .stroke(style: .init())
+                .padding()
+                .overlay(
+                    Capsule()
+                        .strokeBorder(.primary, lineWidth: 1)
                 )
-                
-                LazyVStack(spacing: 10) {
-                    ForEach(viewModel.items) { game in
-                        NavigationLink(destination: DetailGameView()) {
-                            GameListItemView(game: game)
+
+                switch viewModel.state {
+                case .idle:
+                    EmptyView()
+                case .loading:
+                    ProgressView()
+                        .frame(width: 30, height: 30)
+                        .padding(.top, 20)
+                case .data(let array):
+                    LazyVStack(spacing: 24) {
+                        LazyVStack(spacing: 10) {
+                            ForEach(array) { game in
+                                NavigationLink(destination: DetailGameView(
+                                    viewModel: DetailGameViewModel(
+                                        repository: DetailGameRepository(
+                                            dataSource: DetailGameDataSource()
+                                        ),gameID: game.id))
+                                ) {
+                                    GameListItemView(game: game)
+                                }
+                                .buttonStyle(PlainButtonStyle())
+                                Divider()
+                            }
                         }
-                        .buttonStyle(PlainButtonStyle())
-                        Divider()
+                        if viewModel.hasMore {
+                            HStack(alignment: .center) {
+                                Spacer()
+                                if viewModel.isLoadingNext {
+                                    ProgressView()
+                                        .frame(width: 15, height: 15)
+                                        .padding(.vertical, 8)
+                                } else if viewModel.showRestartButton {
+                                    Button(action: {
+                                        viewModel.fetchNext()
+                                    }) {
+                                        Image(systemName: "arrow.trianglehead.counterclockwise")
+                                            .foregroundStyle(.primary)
+                                            .font(.subheadline)
+                                            .padding(.top, 12)
+                                            .padding(.bottom, 30)
+                                    }
+                                } else {
+                                    Text("End List")
+                                        .foregroundStyle(.secondary)
+                                        .font(.subheadline)
+                                        .padding(.vertical, 12)
+                                }
+                                Spacer()
+                            }
+                            .onAppear {
+                                viewModel.fetchNext()
+                            }
+                        }
                     }
+                    .padding(.top, 20)
+                    
+                case .error(let error):
+                    ErrorView(message: error, retryAction: viewModel.restart)
+                        .padding(.top, 20)
                 }
             }
-            .padding(.horizontal)
         }
+        .toast(isPresenting: Binding(
+            get: { viewModel.toastMessage != nil },
+            set: { _ in viewModel.toastMessage = nil }
+        )) {
+            AlertToast(
+                displayMode: .banner(.slide),
+                type: .error(.red),
+                title: viewModel.toastMessage
+            )
+        }
+        .padding()
     }
 }

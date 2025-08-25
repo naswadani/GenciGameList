@@ -8,74 +8,135 @@
 import SwiftUI
 
 struct DetailGameView: View {
+    @StateObject private var imgLoader = DataURLImageLoader()
+    @StateObject var viewModel: DetailGameViewModel
+    
     var body: some View {
-        List {
-            LazyVStack(spacing: 10) {
-                Image("game")
-                    .resizable()
-                    .frame(maxWidth: 350, maxHeight: 250)
-                    .cornerRadius(10)
-                    .scaledToFit()
-                    .overlay(alignment: .bottomTrailing, content: {
-                        Text("84")
-                            .font(.system(size: 20, weight: .bold, design: .default))
-                            .foregroundStyle(.primary)
-                            .padding(10)
-                            .background(
-                                RoundedRectangle(cornerRadius: 10)
-                                    .fill(.green)
-                            )
-                            .offset(x: -20, y: -20)
-                    })
-                
-                LazyVStack(spacing: 5) {
-                    Text("GTA 5")
-                        .multilineTextAlignment(.center)
-                        .font(.headline)
-                        .fontWeight(.semibold)
-                        .fontDesign(.default)
-                        .foregroundStyle(.primary)
-                        .lineLimit(2)
-                    LazyHStack(spacing: 2) {
-                        Image(systemName: "star.fill")
-                            .font(.footnote)
-                            .foregroundStyle(.yellow)
-                        Text("4.5/5")
-                            .font(.footnote)
-                            .fontDesign(.default)
-                            .foregroundStyle(.secondary)
+        ZStack {
+            switch viewModel.state {
+            case .idle:
+                EmptyView()
+            case .loading:
+                ProgressView()
+                    .frame(width: 60, height: 60)
+                    .padding(.top, 20)
+            case .data:
+                List {
+                    LazyVStack(spacing: 10) {
+                        if let imageData = viewModel.items?.backgroundImage, !imageData.isEmpty {
+                            imageSection(url: URL(string: imageData))
+                        }
+                        LazyVStack(spacing: 5) {
+                            Text(viewModel.items?.name ?? "")
+                                .multilineTextAlignment(.center)
+                                .font(.headline)
+                                .fontWeight(.semibold)
+                                .fontDesign(.default)
+                                .foregroundStyle(.primary)
+                                .lineLimit(2)
+                            LazyHStack(spacing: 2) {
+                                Image(systemName: "star.fill")
+                                    .font(.footnote)
+                                    .foregroundStyle(.yellow)
+                                Text(viewModel.items?.formattedRating ?? "")
+                                    .font(.footnote)
+                                    .fontDesign(.default)
+                                    .foregroundStyle(.secondary)
+                            }
+                            
+                            if let devs = viewModel.items?.developers, !devs.isEmpty {
+                                Text(devs.map(\.name).joined(separator: ", "))
+                                    .lineLimit(1)
+                                    .truncationMode(.tail)
+                                    .font(.footnote)
+                                    .foregroundStyle(.secondary)
+                            } else {
+                                Text("-")
+                                    .font(.footnote)
+                                    .foregroundStyle(.secondary)
+                            }
+                        }
                     }
-                    Text("Rockstar Games")
-                        .lineLimit(1)
-                        .font(.footnote)
-                        .fontDesign(.default)
-                        .foregroundStyle(.secondary)
+                    .listRowSeparator(.hidden)
+                    
+                    Section("Genre") {
+                        if let genres = viewModel.items?.genres, !genres.isEmpty {
+                            Text(genres.map(\.name).joined(separator: ", "))
+                                .lineLimit(1)
+                                .truncationMode(.tail)
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        } else {
+                            Text("-")
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
+                    }
+                    
+                    Section("Description") {
+                        Text(viewModel.items?.description ?? "")
+                            .font(.caption)
+                            .foregroundStyle(.primary)
+                    }
+                    
+                    Section("Platfrom") {
+                        if let names = viewModel.items?.platforms?.map({ $0.platform.name }), !names.isEmpty {
+                            Text(names.joined(separator: " · "))
+                                .lineLimit(1)
+                                .truncationMode(.tail)
+                                .font(.footnote)
+                                .foregroundStyle(.secondary)
+                        }
+                        
+                    }
                 }
-            }
-            .listRowSeparator(.hidden)
-            
-            Section("Genre") {
-                Text("Action, Adventure, Criminal, Adult")
-                    .font(.caption)
-                    .foregroundStyle(.primary)
-            }
-            
-            Section("Description") {
-                Text("Grand Theft Auto V (GTA V) adalah game aksi-petualangan dunia terbuka yang dikembangkan oleh Rockstar Games. Berlatar di kota fiksi Los Santos dan sekitarnya, pemain mengikuti kisah Michael De Santa, Franklin Clinton, dan Trevor Philips, tiga karakter dengan latar belakang berbeda yang terjerat dalam dunia kejahatan, pencurian besar, dan konflik pribadi.Game ini menghadirkan dunia terbuka yang sangat luas dan detail, memungkinkan pemain untuk menjelajahi kota, pedesaan, hingga lautan, baik dengan berjalan kaki maupun berbagai kendaraan.")
-                    .font(.caption)
-                    .foregroundStyle(.primary)
-            }
-            
-            Section("Platfrom") {
-                Text("PS 5, PS 4, Nintendo Switch, PC")
-                    .font(.caption)
-                    .foregroundStyle(.primary)
+                .listSectionSpacing(0)
+                .onChange(of: viewModel.items?.backgroundImage) {
+                    Task { await imgLoader.load(viewModel.items?.backgroundImage) }
+                }
+            case .error(let error):
+                ErrorView(message: error, retryAction: viewModel.fetchDetailGame)
             }
         }
-        .listSectionSpacing(0)
+        .onAppear {
+            viewModel.fetchDetailGame()
+        }
     }
-}
-
-#Preview {
-    DetailGameView()
+    
+    private func imageSection(url: URL?) -> some View {
+        AsyncImage(url: url) { phase in
+            switch phase {
+            case .empty:
+                ZStack {
+                    Color.gray.opacity(0.12)
+                    ProgressView()
+                }
+            case .success(let image):
+                image.resizable()
+                    .scaledToFill()
+            case .failure:
+                ZStack {
+                    Color.gray.opacity(0.12)
+                    Image(systemName: "photo").foregroundStyle(.secondary)
+                }
+            @unknown default:
+                EmptyView()
+            }
+        }
+        .frame(width: 300, height: 250)
+        .mask(RoundedRectangle(cornerRadius: 10, style: .continuous))
+        .overlay(alignment: .bottomTrailing, content: {
+            if let metacritic = viewModel.items?.metacritic {
+                Text("\(metacritic)")
+                    .font(.system(size: 20, weight: .bold, design: .default))
+                    .foregroundStyle(.primary)
+                    .padding(10)
+                    .background(
+                        RoundedRectangle(cornerRadius: 10)
+                            .fill(.green)
+                    )
+                    .offset(x: -20, y: -20)
+            }
+        })
+    }
 }

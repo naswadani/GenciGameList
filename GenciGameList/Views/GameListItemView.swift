@@ -26,7 +26,7 @@ struct GameListItemView: View {
                 case .failure:
                     ZStack {
                         Color.gray.opacity(0.12)
-                        Image(systemName: "photo.slash").foregroundStyle(.secondary)
+                        Image(systemName: "photo").foregroundStyle(.secondary)
                     }
                 @unknown default:
                     EmptyView()
@@ -57,7 +57,7 @@ struct GameListItemView: View {
                 Image(systemName: "star.fill")
                     .font(.footnote)
                     .foregroundStyle(.yellow)
-                Text("4.5/5")
+                Text("\(game.formattedRating)/5")
                     .font(.footnote)
                     .fontDesign(.default)
                     .foregroundStyle(.secondary)

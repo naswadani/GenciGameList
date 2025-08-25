@@ -6,6 +6,7 @@ target 'GenciGameList' do
   use_frameworks!
 
   # Pods for GenciGameList
-	  pod 'Alamofire'
+	pod 'Alamofire'
+	pod 'AlertToast'
 
 end
