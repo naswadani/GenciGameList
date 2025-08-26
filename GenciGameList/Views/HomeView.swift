@@ -12,20 +12,14 @@ struct HomeView: View {
     @StateObject var viewModel: HomeViewModel
     
     var body: some View {
-        ZStack {
+        ZStack(alignment: .center) {
             ScrollView(.vertical, showsIndicators: false) {
                 switch viewModel.state {
                 case .idle:
-                    HStack {
-                        Text("Hai")
-                    }
-                    .onAppear {
-                        viewModel.fetchFirst()
-                    }
+                    EmptyView()
                 case .loading:
-                    HStack {
-                        Text("Loading")
-                    }
+                    ProgressView()
+                        .frame(width: 30, height: 30)
                 case .data(let data):
                     LazyVStack(spacing: 10) {
                         dataDisplayList(data: data)
@@ -34,7 +28,7 @@ struct HomeView: View {
                                 Spacer()
                                 if viewModel.isLoadingNext {
                                     ProgressView()
-                                        .frame(width: 15, height: 15)
+                                        .frame(width: 20, height: 20)
                                         .padding(.vertical, 8)
                                 } else if viewModel.showRestartButton {
                                     Button(action: {
@@ -64,6 +58,11 @@ struct HomeView: View {
                 }
             }
         }
+        .task {
+            viewModel.loadIfNeeded()
+        }
+        .navigationTitle("Home")
+        .navigationBarTitleDisplayMode(.large)
         .toast(isPresenting: Binding(
             get: { viewModel.toastMessage != nil },
             set: { _ in viewModel.toastMessage = nil }
@@ -92,7 +91,8 @@ struct HomeView: View {
             NavigationLink(destination: DetailGameView(
                 viewModel: DetailGameViewModel(
                     repository: DetailGameRepository(
-                        dataSource: DetailGameDataSource()
+                        dataSourceRemote: DetailGameDataSource(),
+                        dataSourceLocal: DetailGameLocalDataSource()
                     ),gameID: game.id))
             ) {
                 GameListItemView(game: game)

@@ -7,36 +7,32 @@
 
 import SwiftUI
 
-struct TabBarView: View {
-    @State var selectedTab: Int = 0
-    var body: some View {
-        TabView(selection: $selectedTab) {
-            NavigationStack {
-                HomeView(viewModel: HomeViewModel(
-                    repository: HomepageRepository(dataSource: HomepageDataSource())
-                ))
-                .navigationTitle("Home")
-                .navigationBarTitleDisplayMode(.large)
-            }
-            .tag(0)
-            .tabItem {
-                Label("Home", systemImage: "house.fill")
-            }
-            
-            NavigationStack {
-                SettingsView()
-                    .navigationTitle("Settings")
-                    .navigationBarTitleDisplayMode(.large)
-            }
-            .tag(1)
-            .tabItem {
-                Label("Favorites", systemImage: "gear")
-            }
-        }
-        .ignoresSafeArea(.all)
-    }
-}
+enum AppTab: Hashable { case home, settings }
 
-#Preview {
-    TabBarView()
+struct TabBarView: View {
+    @State private var selection: AppTab = .home
+
+    @StateObject private var homeVM = HomeViewModel(
+        repository: HomepageRepository(dataSource: HomepageDataSource())
+    )
+    @StateObject private var settingsVM = SettingsViewModel(
+        repository: SettingsRepository(dataSourceLocal: DetailGameLocalDataSource())
+    )
+
+    var body: some View {
+        TabView(selection: $selection) {
+
+            NavigationStack {
+                HomeView(viewModel: homeVM)
+            }
+            .tag(AppTab.home)
+            .tabItem { Label("Home", systemImage: "house.fill") }
+
+            NavigationStack {
+                SettingsView(viewModel: settingsVM, selectedTab: $selection)
+            }
+            .tag(AppTab.settings)
+            .tabItem { Label("Settings", systemImage: "gear") }
+        }
+    }
 }

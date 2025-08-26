@@ -9,12 +9,12 @@ import SwiftUI
 
 @main
 struct GenciGameListApp: App {
-    let persistenceController = PersistenceController.shared
+    @AppStorage("settings.darkmode.enabled") private var isDarkMode = false
 
     var body: some Scene {
         WindowGroup {
             TabBarView()
-                .environment(\.managedObjectContext, persistenceController.container.viewContext)
+                .preferredColorScheme(isDarkMode ? .dark : .light)
         }
     }
 }

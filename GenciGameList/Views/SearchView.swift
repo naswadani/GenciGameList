@@ -45,7 +45,8 @@ struct SearchView: View {
                                 NavigationLink(destination: DetailGameView(
                                     viewModel: DetailGameViewModel(
                                         repository: DetailGameRepository(
-                                            dataSource: DetailGameDataSource()
+                                            dataSourceRemote: DetailGameDataSource(),
+                                            dataSourceLocal: DetailGameLocalDataSource()
                                         ),gameID: game.id))
                                 ) {
                                     GameListItemView(game: game)

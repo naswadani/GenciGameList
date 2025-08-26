@@ -23,6 +23,7 @@ final class HomeViewModel: ObservableObject {
     @Published var hasMore = true
     @Published var showRestartButton = false
     
+    private var hasLoaded = false
     private var bag = Set<AnyCancellable>()
     private let repository: HomepageRepositoryProtocol
     private var nextPage: String?
@@ -38,7 +39,6 @@ final class HomeViewModel: ObservableObject {
     
     private func resetState() {
         bag.removeAll()
-        
         state = .idle
         items.removeAll()
         nextPage = nil
@@ -49,12 +49,10 @@ final class HomeViewModel: ObservableObject {
     }
     
     func fetchFirst() {
-        items.removeAll()
         nextPage = nil
         showRestartButton = false
         isLoadingNext = false
         state = .loading
-        
         
         repository.fetch(.first(page: 1, search: nil))
             .receive(on: DispatchQueue.main)
@@ -117,4 +115,12 @@ final class HomeViewModel: ObservableObject {
             }
             .store(in: &bag)
     }
+    
+
+
+     func loadIfNeeded() {
+         guard !hasLoaded else { return }
+         hasLoaded = true
+         fetchFirst()
+     }
 }

@@ -8,5 +8,6 @@ target 'GenciGameList' do
   # Pods for GenciGameList
 	pod 'Alamofire'
 	pod 'AlertToast'
+	pod 'RealmSwift', '~>10'
 
 end
