@@ -8,16 +8,17 @@
 
 📱 Preview
 
-<img width="500" height="1000" alt="Simulator Screenshot - iPhone 16 - 2025-08-26 at 15 09 50" src="https://github.com/user-attachments/assets/4def0138-63a6-4e26-adf8-d6b0987cb416" />
-<img width="500" height="1000" alt="Simulator Screenshot - iPhone 16 - 2025-08-26 at 15 09 52" src="https://github.com/user-attachments/assets/f637aeea-07e4-4de6-afc0-c5da4599282d" />
+<img width="500" height="1000" alt="Simulator Screenshot - iPhone 16 - 2025-08-26 at 15 09 52" src="https://github.com/user-attachments/assets/8c5844cf-1dca-4015-bcfb-173b26f58a92" />
+<img width="500" height="1000" alt="Simulator Screenshot - iPhone 16 - 2025-08-26 at 15 09 50" src="https://github.com/user-attachments/assets/47281bae-d5d7-452b-9dae-2546f9d052a7" />
+
 
 🛠️ Tech Stack
-Swift 5+
-SwiftUI
-Combine
-Realm
-Alamofire untuk networking
-MVVM (Model-View-ViewModel) Architecture
+- Swift 5+
+- SwiftUI
+- Combine
+- Realm
+- Alamofire
+- MVVM (Model-View-ViewModel) Architecture
 
 🚀 Instalasi
 1. Clone Repository
